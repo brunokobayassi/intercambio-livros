@@ -131,8 +131,9 @@
                                                 <td>${livro.autor}</td>
                                                 <td>${livro.nomeDono}</td>
                                                 <td>
-                                                    <button class="btn btn-aceitar"
-                                                        onclick="abrirModal(${livro.id}, '${livro.titulo}')">
+                                                    <button class="btn btn-aceitar" data-id="${livro.id}"
+                                                        data-titulo="${livro.titulo}"
+                                                        onclick="abrirModal(this.dataset.id, this.dataset.titulo)">
                                                         🤝 Propor Troca
                                                     </button>
                                                 </td>
