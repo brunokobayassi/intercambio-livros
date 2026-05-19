@@ -27,4 +27,21 @@ public class UsuarioDAO {
         }
         return lista;
     }
+
+    public Usuario autenticar(String email, String senha) {
+        String sql = "SELECT * FROM usuarios WHERE email = ? AND senha = ?";
+
+        try (ResultSet rs = MysqlSingleton.getInstance().executar(sql, email, senha)) {
+            if (rs.next()) {
+                Usuario usuario = new Usuario();
+                usuario.setId(rs.getInt("id"));
+                usuario.setNome(rs.getString("nome"));
+                usuario.setEmail(rs.getString("email"));
+                return usuario;
+            }
+        } catch (Exception e) {
+            System.out.println("Erro na autenticacao: " + e.getMessage());
+        }
+        return null;
+    }
 }

@@ -1,0 +1,461 @@
+/* ============================================
+   SISTEMA DE INTERCÂMBIO DE LIVROS
+   Folha de Estilo Principal
+   ============================================ */
+
+/* --- Reset & Base --- */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+:root {
+    --cor-primaria: #2c3e50;
+    --cor-secundaria: #3498db;
+    --cor-aceitar: #27ae60;
+    --cor-aceitar-hover: #1e8449;
+    --cor-recusar: #e74c3c;
+    --cor-recusar-hover: #c0392b;
+    --cor-fundo: #f0f2f5;
+    --cor-card: #ffffff;
+    --cor-texto: #2c3e50;
+    --cor-texto-suave: #7f8c8d;
+    --cor-borda: #dce1e7;
+    --sombra: 0 4px 16px rgba(0, 0, 0, 0.08);
+    --sombra-hover: 0 8px 24px rgba(0, 0, 0, 0.13);
+    --raio: 10px;
+    --transicao: all 0.2s ease;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--cor-fundo);
+    color: var(--cor-texto);
+    min-height: 100vh;
+    line-height: 1.6;
+}
+
+/* ============================================
+   TELA DE LOGIN
+   ============================================ */
+
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+    padding: 20px;
+}
+
+.login-card {
+    background: var(--cor-card);
+    border-radius: 16px;
+    box-shadow: var(--sombra-hover);
+    padding: 48px 40px;
+    width: 100%;
+    max-width: 420px;
+    animation: fadeInUp 0.4s ease;
+}
+
+.login-card .logo {
+    text-align: center;
+    margin-bottom: 32px;
+}
+
+.login-card .logo h1 {
+    font-size: 1.6rem;
+    color: var(--cor-primaria);
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.login-card .logo p {
+    font-size: 0.9rem;
+    color: var(--cor-texto-suave);
+    margin-top: 6px;
+}
+
+.login-card .logo .icone {
+    font-size: 3rem;
+    display: block;
+    margin-bottom: 12px;
+}
+
+/* ============================================
+   FORMULÁRIOS GERAIS
+   ============================================ */
+
+.form-grupo {
+    margin-bottom: 20px;
+}
+
+.form-grupo label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--cor-primaria);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.form-grupo input[type="text"],
+.form-grupo input[type="email"],
+.form-grupo input[type="password"] {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1.5px solid var(--cor-borda);
+    border-radius: var(--raio);
+    font-size: 1rem;
+    font-family: inherit;
+    color: var(--cor-texto);
+    background-color: #fafbfc;
+    transition: var(--transicao);
+    outline: none;
+}
+
+.form-grupo input:focus {
+    border-color: var(--cor-secundaria);
+    background-color: #fff;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.15);
+}
+
+.form-grupo input::placeholder {
+    color: #bdc3c7;
+}
+
+/* ============================================
+   BOTÕES
+   ============================================ */
+
+.btn {
+    display: inline-block;
+    padding: 11px 22px;
+    border: none;
+    border-radius: var(--raio);
+    font-size: 0.95rem;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: var(--transicao);
+    text-decoration: none;
+    text-align: center;
+    letter-spacing: 0.3px;
+}
+
+.btn-primario {
+    background-color: var(--cor-secundaria);
+    color: #fff;
+    width: 100%;
+    padding: 14px;
+    font-size: 1rem;
+}
+
+.btn-primario:hover {
+    background-color: #2980b9;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.4);
+}
+
+.btn-aceitar {
+    background-color: var(--cor-aceitar);
+    color: #fff;
+    padding: 7px 16px;
+    font-size: 0.85rem;
+}
+
+.btn-aceitar:hover {
+    background-color: var(--cor-aceitar-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(39, 174, 96, 0.35);
+}
+
+.btn-recusar {
+    background-color: var(--cor-recusar);
+    color: #fff;
+    padding: 7px 16px;
+    font-size: 0.85rem;
+    margin-left: 6px;
+}
+
+.btn-recusar:hover {
+    background-color: var(--cor-recusar-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(231, 76, 60, 0.35);
+}
+
+.btn-secundario {
+    background-color: transparent;
+    color: var(--cor-secundaria);
+    border: 1.5px solid var(--cor-secundaria);
+}
+
+.btn-secundario:hover {
+    background-color: var(--cor-secundaria);
+    color: #fff;
+}
+
+/* ============================================
+   MENSAGENS DE ERRO E SUCESSO
+   ============================================ */
+
+.alerta {
+    padding: 12px 16px;
+    border-radius: var(--raio);
+    font-size: 0.9rem;
+    font-weight: 500;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.alerta-erro {
+    background-color: #fdecea;
+    color: #c0392b;
+    border: 1px solid #f5c6cb;
+}
+
+.alerta-sucesso {
+    background-color: #eafaf1;
+    color: #1e8449;
+    border: 1px solid #a9dfbf;
+}
+
+/* ============================================
+   NAVBAR
+   ============================================ */
+
+.navbar {
+    background-color: var(--cor-primaria);
+    color: #fff;
+    padding: 0 32px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.navbar-brand {
+    font-size: 1.25rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #fff;
+    text-decoration: none;
+}
+
+.navbar-usuario {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-size: 0.9rem;
+}
+
+.navbar-usuario .nome-usuario {
+    font-weight: 600;
+    opacity: 0.9;
+}
+
+.navbar-usuario a {
+    color: #aed6f1;
+    text-decoration: none;
+    font-size: 0.85rem;
+    transition: var(--transicao);
+}
+
+.navbar-usuario a:hover {
+    color: #fff;
+}
+
+/* ============================================
+   DASHBOARD — LAYOUT
+   ============================================ */
+
+.dashboard-wrapper {
+    max-width: 1400px;
+    margin: 32px auto;
+    padding: 0 32px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    align-items: start;
+}
+
+/* Botão "Ver Livros" ocupa linha inteira */
+.dashboard-wrapper>div[style*="grid-column"],
+.dashboard-wrapper>div:first-child {
+    grid-column: 1 / -1;
+}
+
+/* ============================================
+   CARDS / SEÇÕES DO DASHBOARD
+   ============================================ */
+
+.card-secao {
+    background: var(--cor-card);
+    border-radius: 14px;
+    box-shadow: var(--sombra);
+    padding: 24px 28px;
+    transition: var(--transicao);
+    animation: fadeInUp 0.35s ease;
+    overflow-x: auto;
+}
+
+.card-secao:hover {
+    box-shadow: var(--sombra-hover);
+}
+
+.card-secao h2 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--cor-primaria);
+    margin-bottom: 6px;
+    padding-bottom: 14px;
+    border-bottom: 2px solid var(--cor-fundo);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.card-secao h2 .badge {
+    background-color: var(--cor-secundaria);
+    color: #fff;
+    font-size: 0.75rem;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-weight: 600;
+}
+
+/* ============================================
+   TABELAS
+   ============================================ */
+
+.tabela-trocas {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 8px;
+    font-size: 0.9rem;
+    min-width: 400px;
+}
+
+.tabela-trocas thead tr {
+    background-color: var(--cor-fundo);
+}
+
+.tabela-trocas th {
+    padding: 10px 16px;
+    text-align: left;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--cor-texto-suave);
+    border-bottom: 2px solid var(--cor-borda);
+    white-space: nowrap;
+}
+
+.tabela-trocas td {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--cor-borda);
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+.tabela-trocas tr:last-child td {
+    border-bottom: none;
+}
+
+.tabela-trocas tr:hover td {
+    background-color: #f8f9fa;
+}
+
+.acoes-troca {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    white-space: nowrap;
+}
+
+.tabela-vazia {
+    text-align: center;
+    padding: 32px !important;
+    color: var(--cor-texto-suave);
+    font-size: 0.9rem;
+    white-space: normal;
+}
+
+/* ============================================
+   FORMULÁRIO DE CADASTRO DE LIVRO
+   ============================================ */
+
+.form-livro .form-grupo input {
+    background-color: #fafbfc;
+}
+
+.form-livro .btn-primario {
+    margin-top: 4px;
+}
+
+/* ============================================
+   RESPONSIVIDADE
+   ============================================ */
+
+@media (max-width: 900px) {
+    .dashboard-wrapper {
+        grid-template-columns: 1fr;
+        margin: 20px auto;
+        padding: 0 16px;
+        gap: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .login-card {
+        padding: 32px 24px;
+    }
+
+    .navbar {
+        padding: 0 16px;
+    }
+
+    .card-secao {
+        padding: 16px;
+    }
+
+    .tabela-trocas th,
+    .tabela-trocas td {
+        padding: 10px 10px;
+        font-size: 0.82rem;
+    }
+
+    .btn-aceitar,
+    .btn-recusar {
+        margin-left: 0;
+    }
+}
+
+/* ============================================
+   ANIMAÇÕES
+   ============================================ */
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

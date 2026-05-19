@@ -13,7 +13,6 @@ public class MysqlSingleton {
     private static final String PASSWORD = "root";
 
     private static MysqlSingleton instance;
-    private Connection conexao;
 
     private MysqlSingleton() {
         try {
@@ -30,15 +29,12 @@ public class MysqlSingleton {
         return instance;
     }
 
-    private Connection obterConexao() throws SQLException {
-        if (this.conexao == null || this.conexao.isClosed()) {
-            this.conexao = DriverManager.getConnection(URL, USER, PASSWORD);
-        }
-        return this.conexao;
+    private Connection novaConexao() throws SQLException {
+        return DriverManager.getConnection(URL, USER, PASSWORD);
     }
 
     public ResultSet executar(String sql, Object... parametros) throws SQLException {
-        Connection conn = this.obterConexao();
+        Connection conn = novaConexao();
         PreparedStatement ps = conn.prepareStatement(sql);
         for (int i = 0; i < parametros.length; i++) {
             ps.setObject(i + 1, parametros[i]);
@@ -47,8 +43,8 @@ public class MysqlSingleton {
     }
 
     public int executarUpdate(String sql, Object... parametros) throws SQLException {
-        Connection conn = this.obterConexao();
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = novaConexao();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
             for (int i = 0; i < parametros.length; i++) {
                 ps.setObject(i + 1, parametros[i]);
             }

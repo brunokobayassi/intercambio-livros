@@ -1,5 +1,13 @@
-br\com\livros\model\Usuario.class
+br\com\livros\dao\LivroDAO.class
 br\com\livros\dao\UsuarioDAO.class
-br\com\livros\controller\UsuarioController.class
+br\com\livros\dao\TrocaDAO.class
+br\com\livros\model\Livro.class
 br\com\livros\config\MysqlSingleton.class
 br\com\livros\service\UsuarioService.class
+br\com\livros\model\Troca.class
+br\com\livros\model\Usuario.class
+br\com\livros\controller\TrocaController.class
+br\com\livros\model\TrocaDetalhada.class
+br\com\livros\service\TrocaService.class
+br\com\livros\controller\UsuarioController.class
+br\com\livros\controller\LivroController.class
