@@ -1,6 +1,11 @@
 package br.com.livros.model;
 
-public class TrocaDetalhada {
+import java.io.Serializable;
+
+public class TrocaDetalhada implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+
     private int id;
     private String tituloLivroOferecido;
     private String tituloLivroRecebido;
@@ -9,6 +14,16 @@ public class TrocaDetalhada {
     private String status;
 
     public TrocaDetalhada() {
+    }
+
+    public TrocaDetalhada(int id, String tituloLivroOferecido, String tituloLivroRecebido,
+            String nomeProponente, String nomeSolicitado, String status) {
+        this.id = id;
+        this.tituloLivroOferecido = tituloLivroOferecido;
+        this.tituloLivroRecebido = tituloLivroRecebido;
+        this.nomeProponente = nomeProponente;
+        this.nomeSolicitado = nomeSolicitado;
+        this.status = status;
     }
 
     public int getId() {
@@ -57,5 +72,11 @@ public class TrocaDetalhada {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    @Override
+    public String toString() {
+        return "TrocaDetalhada{id=" + id + ", oferecido='" + tituloLivroOferecido +
+                "', recebido='" + tituloLivroRecebido + "', status='" + status + "'}";
     }
 }

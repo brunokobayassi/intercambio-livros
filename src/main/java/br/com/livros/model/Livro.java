@@ -1,6 +1,10 @@
 package br.com.livros.model;
 
-public class Livro {
+import java.io.Serializable;
+
+public class Livro implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private int id;
     private String titulo;
@@ -9,6 +13,13 @@ public class Livro {
     private String nomeDono;
 
     public Livro() {
+    }
+
+    public Livro(int id, String titulo, String autor, int usuarioId) {
+        this.id = id;
+        this.titulo = titulo;
+        this.autor = autor;
+        this.usuarioId = usuarioId;
     }
 
     public int getId() {
@@ -49,5 +60,10 @@ public class Livro {
 
     public void setNomeDono(String nomeDono) {
         this.nomeDono = nomeDono;
+    }
+
+    @Override
+    public String toString() {
+        return "Livro{id=" + id + ", titulo='" + titulo + "', autor='" + autor + "', usuarioId=" + usuarioId + "}";
     }
 }

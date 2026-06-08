@@ -245,7 +245,7 @@
                                 </div>
 
                                 <%-- Cadastrar Livro --%>
-                                    <div class="card-secao dashboard-bottom">
+                                    <div class="card-secao" style="width: 100%;">
                                         <h2>📖 Cadastrar Livro</h2>
                                         <form action="${pageContext.request.contextPath}/livros" method="POST"
                                             class="form-livro">
