@@ -1,63 +1,50 @@
 package br.com.livros.util;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.security.Keys;
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.JWTVerifier;
+import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.exceptions.JWTVerificationException;
+import com.auth0.jwt.interfaces.DecodedJWT;
 
-import java.security.Key;
 import java.util.Date;
 
 public class JwtUtil {
 
-    // Chave secreta para assinar o token — nunca expor isso em produção
-    private static final Key CHAVE_SECRETA = Keys.secretKeyFor(SignatureAlgorithm.HS256);
-
-    // Token válido por 8 horas
+    private static final String SECRET = "intercambio-livros-secret";
+    private static final String ISSUER = "intercambio-livros";
     private static final long EXPIRACAO_MS = 8 * 60 * 60 * 1000;
+    private static final Algorithm ALGORITHM = Algorithm.HMAC256(SECRET);
 
-    /**
-     * Gera um token JWT com o email do usuário como subject
-     */
-    public static String gerarToken(String email) {
-        return Jwts.builder()
-                .setSubject(email)
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + EXPIRACAO_MS))
-                .signWith(CHAVE_SECRETA)
-                .compact();
+    public static String gerarToken(long userId) {
+        return JWT.create()
+                .withIssuer(ISSUER)
+                .withClaim("userId", userId)
+                .withIssuedAt(new Date())
+                .withExpiresAt(new Date(System.currentTimeMillis() + EXPIRACAO_MS))
+                .sign(ALGORITHM);
     }
 
-    /**
-     * Valida o token — retorna true se for válido, false se inválido ou expirado
-     */
     public static boolean validarToken(String token) {
         try {
-            Jwts.parserBuilder()
-                    .setSigningKey(CHAVE_SECRETA)
-                    .build()
-                    .parseClaimsJws(token);
+            buildVerifier().verify(token);
             return true;
-        } catch (Exception e) {
-            System.out.println("Token inválido: " + e.getMessage());
+        } catch (JWTVerificationException e) {
             return false;
         }
     }
 
-    /**
-     * Extrai o email (subject) do token
-     */
-    public static String extrairEmail(String token) {
+    public static Long extrairUsuarioId(String token) {
         try {
-            Claims claims = Jwts.parserBuilder()
-                    .setSigningKey(CHAVE_SECRETA)
-                    .build()
-                    .parseClaimsJws(token)
-                    .getBody();
-            return claims.getSubject();
-        } catch (Exception e) {
-            System.out.println("Erro ao extrair email do token: " + e.getMessage());
+            DecodedJWT decoded = buildVerifier().verify(token);
+            return decoded.getClaim("userId").asLong();
+        } catch (JWTVerificationException e) {
             return null;
         }
+    }
+
+    private static JWTVerifier buildVerifier() {
+        return JWT.require(ALGORITHM)
+                .withIssuer(ISSUER)
+                .build();
     }
 }

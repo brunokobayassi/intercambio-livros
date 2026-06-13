@@ -4,10 +4,12 @@ br\com\livros\dao\TrocaDAO.class
 br\com\livros\model\Livro.class
 br\com\livros\config\MysqlSingleton.class
 br\com\livros\service\UsuarioService.class
+br\com\livros\controller\LoginApiController.class
+br\com\livros\filter\AuthFilter.class
 br\com\livros\model\Troca.class
+br\com\livros\util\JwtUtil.class
+br\com\livros\controller\TrocaApiController.class
 br\com\livros\model\Usuario.class
-br\com\livros\controller\TrocaController.class
 br\com\livros\model\TrocaDetalhada.class
 br\com\livros\service\TrocaService.class
-br\com\livros\controller\UsuarioController.class
-br\com\livros\controller\LivroController.class
+br\com\livros\controller\LivroApiController.class

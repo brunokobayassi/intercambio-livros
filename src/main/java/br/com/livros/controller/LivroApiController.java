@@ -1,10 +1,7 @@
 package br.com.livros.controller;
 
 import br.com.livros.dao.LivroDAO;
-import br.com.livros.dao.UsuarioDAO;
 import br.com.livros.model.Livro;
-import br.com.livros.model.Usuario;
-import br.com.livros.util.JwtUtil;
 import com.google.gson.Gson;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -21,231 +18,196 @@ public class LivroApiController extends HttpServlet {
 
     private final Gson gson = new Gson();
     private final LivroDAO livroDAO = new LivroDAO();
-    private final UsuarioDAO usuarioDAO = new UsuarioDAO();
 
-    // ================================================================
-    // GET /api/livros — lista livros disponíveis de outros usuários
-    // GET /api/livros/{id} — busca um livro pelo ID
-    // ================================================================
+    // GET /api/livros       — lista livros disponíveis de outros usuários
+    // GET /api/livros/{id}  — busca um livro pelo ID
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
 
-        response.setContentType("application/json");
-        response.setCharacterEncoding("UTF-8");
+        resp.setContentType("application/json");
+        resp.setCharacterEncoding("UTF-8");
 
-        String pathInfo = request.getPathInfo();
+        String path = req.getPathInfo();
 
-        // GET /api/livros/{id}
-        if (pathInfo != null && !pathInfo.equals("/")) {
+        if (path != null && !path.equals("/")) {
             try {
-                int id = Integer.parseInt(pathInfo.substring(1));
+                int id = Integer.parseInt(path.substring(1));
                 Livro livro = livroDAO.buscarPorId(id);
 
                 if (livro == null) {
-                    response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                    response.getWriter().write("{\"erro\": \"Livro não encontrado\"}");
+                    resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                    resp.getWriter().write("{\"erro\": \"Livro não encontrado\"}");
                     return;
                 }
 
-                response.setStatus(HttpServletResponse.SC_OK);
-                response.getWriter().write(gson.toJson(livro));
+                resp.setStatus(HttpServletResponse.SC_OK);
+                resp.getWriter().write(gson.toJson(livro));
 
             } catch (NumberFormatException e) {
-                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                response.getWriter().write("{\"erro\": \"ID inválido\"}");
+                resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                resp.getWriter().write("{\"erro\": \"ID inválido\"}");
             }
             return;
         }
 
-        // GET /api/livros — lista livros de outros usuários
-        String email = (String) request.getAttribute("emailUsuario");
-        Usuario usuarioLogado = usuarioDAO.buscarPorEmail(email);
+        long usuarioId = (Long) req.getAttribute("usuarioId");
+        List<Livro> livros = livroDAO.listarDeOutrosUsuarios((int) usuarioId);
 
-        List<Livro> livros = livroDAO.listarDeOutrosUsuarios(usuarioLogado.getId());
-
-        response.setStatus(HttpServletResponse.SC_OK);
-        response.getWriter().write(gson.toJson(livros));
+        resp.setStatus(HttpServletResponse.SC_OK);
+        resp.getWriter().write(gson.toJson(livros));
     }
 
-    // ================================================================
     // POST /api/livros — cadastra um novo livro
-    // ================================================================
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
 
-        response.setContentType("application/json");
-        response.setCharacterEncoding("UTF-8");
+        resp.setContentType("application/json");
+        resp.setCharacterEncoding("UTF-8");
 
-        // Lê o body
-        StringBuilder body = new StringBuilder();
-        try (BufferedReader reader = request.getReader()) {
-            String linha;
-            while ((linha = reader.readLine()) != null) {
-                body.append(linha);
-            }
-        }
+        Livro livro = lerBody(req, Livro.class);
 
-        // Deserializa o JSON para um objeto Livro
-        Livro livro = gson.fromJson(body.toString(), Livro.class);
-
-        // Valida campos obrigatórios
         if (livro == null
                 || livro.getTitulo() == null || livro.getTitulo().trim().isEmpty()
                 || livro.getAutor() == null || livro.getAutor().trim().isEmpty()) {
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            response.getWriter().write("{\"erro\": \"Título e autor são obrigatórios\"}");
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resp.getWriter().write("{\"erro\": \"Título e autor são obrigatórios\"}");
             return;
         }
 
-        // Pega o usuário logado pelo email do token
-        String email = (String) request.getAttribute("emailUsuario");
-        Usuario usuarioLogado = usuarioDAO.buscarPorEmail(email);
-
-        livro.setUsuarioId(usuarioLogado.getId());
+        long usuarioId = (Long) req.getAttribute("usuarioId");
+        livro.setUsuarioId((int) usuarioId);
 
         boolean ok = livroDAO.cadastrarLivro(livro);
 
         if (ok) {
-            response.setStatus(HttpServletResponse.SC_CREATED);
-            response.getWriter().write("{\"mensagem\": \"Livro cadastrado com sucesso\"}");
+            resp.setStatus(HttpServletResponse.SC_CREATED);
+            resp.getWriter().write("{\"mensagem\": \"Livro cadastrado com sucesso\"}");
         } else {
-            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            response.getWriter().write("{\"erro\": \"Erro ao cadastrar livro\"}");
+            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            resp.getWriter().write("{\"erro\": \"Erro ao cadastrar livro\"}");
         }
     }
 
-    // ================================================================
-    // PUT /api/livros/{id} — atualiza título e autor de um livro
-    // ================================================================
+    // PUT /api/livros/{id} — substitui título e autor do livro (idempotente)
     @Override
-    protected void doPut(HttpServletRequest request, HttpServletResponse response)
+    protected void doPut(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
 
-        response.setContentType("application/json");
-        response.setCharacterEncoding("UTF-8");
+        resp.setContentType("application/json");
+        resp.setCharacterEncoding("UTF-8");
 
-        String pathInfo = request.getPathInfo();
+        String path = req.getPathInfo();
 
-        if (pathInfo == null || pathInfo.equals("/")) {
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            response.getWriter().write("{\"erro\": \"ID do livro é obrigatório\"}");
+        if (path == null || path.equals("/")) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resp.getWriter().write("{\"erro\": \"ID do livro é obrigatório\"}");
             return;
         }
 
         try {
-            int id = Integer.parseInt(pathInfo.substring(1));
+            int id = Integer.parseInt(path.substring(1));
+            long usuarioId = (Long) req.getAttribute("usuarioId");
 
-            // Verifica se o livro existe
             Livro livroExistente = livroDAO.buscarPorId(id);
             if (livroExistente == null) {
-                response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                response.getWriter().write("{\"erro\": \"Livro não encontrado\"}");
+                resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                resp.getWriter().write("{\"erro\": \"Livro não encontrado\"}");
                 return;
             }
 
-            // Verifica se o livro pertence ao usuário logado
-            String email = (String) request.getAttribute("emailUsuario");
-            Usuario usuarioLogado = usuarioDAO.buscarPorEmail(email);
-
-            if (livroExistente.getUsuarioId() != usuarioLogado.getId()) {
-                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                response.getWriter().write("{\"erro\": \"Você não tem permissão para editar este livro\"}");
+            if (livroExistente.getUsuarioId() != (int) usuarioId) {
+                resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                resp.getWriter().write("{\"erro\": \"Você não tem permissão para editar este livro\"}");
                 return;
             }
 
-            // Lê o body
-            StringBuilder body = new StringBuilder();
-            try (BufferedReader reader = request.getReader()) {
-                String linha;
-                while ((linha = reader.readLine()) != null) {
-                    body.append(linha);
-                }
-            }
+            Livro livroAtualizado = lerBody(req, Livro.class);
 
-            Livro livroAtualizado = gson.fromJson(body.toString(), Livro.class);
-
-            // Valida campos
             if (livroAtualizado == null
                     || livroAtualizado.getTitulo() == null || livroAtualizado.getTitulo().trim().isEmpty()
                     || livroAtualizado.getAutor() == null || livroAtualizado.getAutor().trim().isEmpty()) {
-                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                response.getWriter().write("{\"erro\": \"Título e autor são obrigatórios\"}");
+                resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                resp.getWriter().write("{\"erro\": \"Título e autor são obrigatórios\"}");
                 return;
             }
 
             livroAtualizado.setId(id);
-            livroAtualizado.setUsuarioId(usuarioLogado.getId());
+            livroAtualizado.setUsuarioId((int) usuarioId);
 
             boolean ok = livroDAO.atualizar(livroAtualizado);
 
             if (ok) {
-                response.setStatus(HttpServletResponse.SC_OK);
-                response.getWriter().write("{\"mensagem\": \"Livro atualizado com sucesso\"}");
+                resp.setStatus(HttpServletResponse.SC_OK);
+                resp.getWriter().write("{\"mensagem\": \"Livro atualizado com sucesso\"}");
             } else {
-                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                response.getWriter().write("{\"erro\": \"Erro ao atualizar livro\"}");
+                resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                resp.getWriter().write("{\"erro\": \"Erro ao atualizar livro\"}");
             }
 
         } catch (NumberFormatException e) {
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            response.getWriter().write("{\"erro\": \"ID inválido\"}");
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resp.getWriter().write("{\"erro\": \"ID inválido\"}");
         }
     }
 
-    // ================================================================
-    // DELETE /api/livros/{id} — deleta um livro
-    // ================================================================
+    // DELETE /api/livros/{id} — remove um livro; retorna 204 sem corpo
     @Override
-    protected void doDelete(HttpServletRequest request, HttpServletResponse response)
+    protected void doDelete(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
 
-        response.setContentType("application/json");
-        response.setCharacterEncoding("UTF-8");
+        resp.setContentType("application/json");
+        resp.setCharacterEncoding("UTF-8");
 
-        String pathInfo = request.getPathInfo();
+        String path = req.getPathInfo();
 
-        if (pathInfo == null || pathInfo.equals("/")) {
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            response.getWriter().write("{\"erro\": \"ID do livro é obrigatório\"}");
+        if (path == null || path.equals("/")) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resp.getWriter().write("{\"erro\": \"ID do livro é obrigatório\"}");
             return;
         }
 
         try {
-            int id = Integer.parseInt(pathInfo.substring(1));
+            int id = Integer.parseInt(path.substring(1));
+            long usuarioId = (Long) req.getAttribute("usuarioId");
 
-            // Verifica se o livro existe
             Livro livro = livroDAO.buscarPorId(id);
             if (livro == null) {
-                response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                response.getWriter().write("{\"erro\": \"Livro não encontrado\"}");
+                resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                resp.getWriter().write("{\"erro\": \"Livro não encontrado\"}");
                 return;
             }
 
-            // Verifica se o livro pertence ao usuário logado
-            String email = (String) request.getAttribute("emailUsuario");
-            Usuario usuarioLogado = usuarioDAO.buscarPorEmail(email);
-
-            if (livro.getUsuarioId() != usuarioLogado.getId()) {
-                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                response.getWriter().write("{\"erro\": \"Você não tem permissão para deletar este livro\"}");
+            if (livro.getUsuarioId() != (int) usuarioId) {
+                resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                resp.getWriter().write("{\"erro\": \"Você não tem permissão para deletar este livro\"}");
                 return;
             }
 
             boolean ok = livroDAO.deletar(id);
 
             if (ok) {
-                response.setStatus(HttpServletResponse.SC_OK);
-                response.getWriter().write("{\"mensagem\": \"Livro deletado com sucesso\"}");
+                resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
             } else {
-                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                response.getWriter().write("{\"erro\": \"Erro ao deletar livro\"}");
+                resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                resp.getWriter().write("{\"erro\": \"Erro ao deletar livro\"}");
             }
 
         } catch (NumberFormatException e) {
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            response.getWriter().write("{\"erro\": \"ID inválido\"}");
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resp.getWriter().write("{\"erro\": \"ID inválido\"}");
         }
+    }
+
+    private <T> T lerBody(HttpServletRequest req, Class<T> tipo) throws IOException {
+        StringBuilder body = new StringBuilder();
+        try (BufferedReader reader = req.getReader()) {
+            String linha;
+            while ((linha = reader.readLine()) != null) {
+                body.append(linha);
+            }
+        }
+        return gson.fromJson(body.toString(), tipo);
     }
 }

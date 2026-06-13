@@ -66,8 +66,7 @@ public class LoginApiController extends HttpServlet {
             return;
         }
 
-        // Gera o token JWT com o email do usuário
-        String token = JwtUtil.gerarToken(usuario.getEmail());
+        String token = JwtUtil.gerarToken(usuario.getId());
 
         // Monta a resposta com o token e dados básicos do usuário
         JsonObject resposta = new JsonObject();

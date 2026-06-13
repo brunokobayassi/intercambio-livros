@@ -27,44 +27,39 @@ public class AuthFilter implements Filter {
         HttpServletRequest httpRequest = (HttpServletRequest) request;
         HttpServletResponse httpResponse = (HttpServletResponse) response;
 
-        // Libera requisições de login sem token
         String uri = httpRequest.getRequestURI();
         if (uri.endsWith("/api/login")) {
             chain.doFilter(request, response);
             return;
         }
 
-        // Lê o header Authorization
         String authHeader = httpRequest.getHeader("Authorization");
 
-        // Verifica se o header existe e começa com "Bearer "
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            httpResponse.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            httpResponse.setContentType("application/json");
-            httpResponse.getWriter().write("{\"erro\": \"Acesso não autorizado\"}");
+            sendUnauthorized(httpResponse);
             return;
         }
 
-        // Extrai o token removendo o prefixo "Bearer "
         String token = authHeader.substring(7);
 
-        // Valida o token
-        if (!JwtUtil.validarToken(token)) {
-            httpResponse.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            httpResponse.setContentType("application/json");
-            httpResponse.getWriter().write("{\"erro\": \"Acesso não autorizado\"}");
+        Long usuarioId = JwtUtil.extrairUsuarioId(token);
+        if (usuarioId == null) {
+            sendUnauthorized(httpResponse);
             return;
         }
 
-        // Token válido — extrai o email e passa para o Controller via atributo
-        String email = JwtUtil.extrairEmail(token);
-        httpRequest.setAttribute("emailUsuario", email);
-
-        // Continua para o Controller
+        httpRequest.setAttribute("usuarioId", usuarioId);
         chain.doFilter(request, response);
     }
 
     @Override
     public void destroy() {
+    }
+
+    private void sendUnauthorized(HttpServletResponse response) throws IOException {
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        response.getWriter().write("{\"erro\": \"Token inválido ou ausente\"}");
     }
 }
