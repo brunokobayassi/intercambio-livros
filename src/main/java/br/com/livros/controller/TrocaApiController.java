@@ -1,8 +1,7 @@
 package br.com.livros.controller;
 
-import br.com.livros.dao.LivroDAO;
-import br.com.livros.dao.TrocaDAO;
 import br.com.livros.model.TrocaDetalhada;
+import br.com.livros.service.TrocaService;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import jakarta.servlet.ServletException;
@@ -14,17 +13,14 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 @WebServlet("/api/trocas/*")
 public class TrocaApiController extends HttpServlet {
 
     private final Gson gson = new Gson();
-    private final TrocaDAO trocaDAO = new TrocaDAO();
-    private final LivroDAO livroDAO = new LivroDAO();
+    private final TrocaService trocaService = new TrocaService();
 
-    // GET /api/trocas           — pendentes + propostas do usuário logado
-    // GET /api/trocas/pendentes — só as pendentes recebidas
-    // GET /api/trocas/propostas — só as propostas enviadas
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
@@ -36,21 +32,21 @@ public class TrocaApiController extends HttpServlet {
         String path = req.getPathInfo();
 
         if ("/pendentes".equals(path)) {
-            List<TrocaDetalhada> pendentes = trocaDAO.listarPendentesDetalhadas(usuarioId);
+            List<TrocaDetalhada> pendentes = trocaService.listarPendentes(usuarioId);
             resp.setStatus(HttpServletResponse.SC_OK);
             resp.getWriter().write(gson.toJson(pendentes));
             return;
         }
 
         if ("/propostas".equals(path)) {
-            List<TrocaDetalhada> propostas = trocaDAO.listarMinhasPropostas(usuarioId);
+            List<TrocaDetalhada> propostas = trocaService.listarPropostas(usuarioId);
             resp.setStatus(HttpServletResponse.SC_OK);
             resp.getWriter().write(gson.toJson(propostas));
             return;
         }
 
-        List<TrocaDetalhada> pendentes = trocaDAO.listarPendentesDetalhadas(usuarioId);
-        List<TrocaDetalhada> propostas = trocaDAO.listarMinhasPropostas(usuarioId);
+        List<TrocaDetalhada> pendentes = trocaService.listarPendentes(usuarioId);
+        List<TrocaDetalhada> propostas = trocaService.listarPropostas(usuarioId);
 
         JsonObject resposta = new JsonObject();
         resposta.add("pendentes", gson.toJsonTree(pendentes));
@@ -60,8 +56,6 @@ public class TrocaApiController extends HttpServlet {
         resp.getWriter().write(gson.toJson(resposta));
     }
 
-    // POST /api/trocas — propõe uma nova troca
-    // Body: { "livroOferecidoId": 1, "livroRecebidoId": 2 }
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
@@ -71,11 +65,9 @@ public class TrocaApiController extends HttpServlet {
 
         JsonObject dados = lerBody(req);
 
-        if (dados == null
-                || !dados.has("livroOferecidoId")
-                || !dados.has("livroRecebidoId")) {
+        if (dados == null || !dados.has("livroOferecidoId") || !dados.has("livroRecebidoId")) {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            resp.getWriter().write("{\"erro\": \"livroOferecidoId e livroRecebidoId são obrigatórios\"}");
+            resp.getWriter().write(erro("livroOferecidoId e livroRecebidoId são obrigatórios"));
             return;
         }
 
@@ -83,39 +75,25 @@ public class TrocaApiController extends HttpServlet {
         int livroRecebidoId = dados.get("livroRecebidoId").getAsInt();
         int usuarioId = ((Long) req.getAttribute("usuarioId")).intValue();
 
-        int donoOferecido = livroDAO.buscarDonoPorLivro(livroOferecidoId);
-        if (donoOferecido != usuarioId) {
-            resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
-            resp.getWriter().write("{\"erro\": \"O livro oferecido não pertence a você\"}");
-            return;
-        }
-
-        int usuarioSolicitadoId = livroDAO.buscarDonoPorLivro(livroRecebidoId);
-        if (usuarioSolicitadoId == -1) {
-            resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            resp.getWriter().write("{\"erro\": \"Livro desejado não encontrado\"}");
-            return;
-        }
-
-        if (usuarioSolicitadoId == usuarioId) {
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            resp.getWriter().write("{\"erro\": \"Você não pode trocar livros com você mesmo\"}");
-            return;
-        }
-
-        boolean ok = trocaDAO.inserirTroca(livroOferecidoId, livroRecebidoId, usuarioId, usuarioSolicitadoId);
-
-        if (ok) {
+        try {
+            trocaService.propor(livroOferecidoId, livroRecebidoId, usuarioId);
             resp.setStatus(HttpServletResponse.SC_CREATED);
             resp.getWriter().write("{\"mensagem\": \"Proposta de troca enviada com sucesso\"}");
-        } else {
+        } catch (SecurityException e) {
+            resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            resp.getWriter().write(erro(e.getMessage()));
+        } catch (NoSuchElementException e) {
+            resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            resp.getWriter().write(erro(e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resp.getWriter().write(erro(e.getMessage()));
+        } catch (RuntimeException e) {
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            resp.getWriter().write("{\"erro\": \"Erro ao enviar proposta de troca\"}");
+            resp.getWriter().write(erro("Erro ao enviar proposta de troca"));
         }
     }
 
-    // PUT /api/trocas/{id} — aceita ou recusa uma troca (idempotente)
-    // Body: { "acao": "aceitar" } ou { "acao": "recusar" }
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
@@ -127,44 +105,35 @@ public class TrocaApiController extends HttpServlet {
 
         if (path == null || path.equals("/")) {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            resp.getWriter().write("{\"erro\": \"ID da troca é obrigatório\"}");
+            resp.getWriter().write(erro("ID da troca é obrigatório"));
             return;
         }
 
         try {
             int id = Integer.parseInt(path.substring(1));
-
             JsonObject dados = lerBody(req);
 
             if (dados == null || !dados.has("acao")) {
                 resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                resp.getWriter().write("{\"erro\": \"Campo acao é obrigatório\"}");
+                resp.getWriter().write(erro("Campo acao é obrigatório"));
                 return;
             }
 
             String acao = dados.get("acao").getAsString().toLowerCase();
+            String mensagem = trocaService.responder(id, acao);
 
-            if (!acao.equals("aceitar") && !acao.equals("recusar")) {
-                resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                resp.getWriter().write("{\"erro\": \"Acao deve ser aceitar ou recusar\"}");
-                return;
-            }
-
-            String novoStatus = acao.equals("aceitar") ? "ACEITA" : "RECUSADA";
-            boolean ok = trocaDAO.atualizarStatus(id, novoStatus);
-
-            if (ok) {
-                String mensagem = novoStatus.equals("ACEITA") ? "Troca aceita com sucesso" : "Troca recusada com sucesso";
-                resp.setStatus(HttpServletResponse.SC_OK);
-                resp.getWriter().write("{\"mensagem\": \"" + mensagem + "\"}");
-            } else {
-                resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                resp.getWriter().write("{\"erro\": \"Troca não encontrada\"}");
-            }
+            resp.setStatus(HttpServletResponse.SC_OK);
+            resp.getWriter().write("{\"mensagem\": \"" + mensagem + "\"}");
 
         } catch (NumberFormatException e) {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            resp.getWriter().write("{\"erro\": \"ID inválido\"}");
+            resp.getWriter().write(erro("ID inválido"));
+        } catch (IllegalArgumentException e) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resp.getWriter().write(erro(e.getMessage()));
+        } catch (NoSuchElementException e) {
+            resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            resp.getWriter().write(erro(e.getMessage()));
         }
     }
 
@@ -177,5 +146,11 @@ public class TrocaApiController extends HttpServlet {
             }
         }
         return gson.fromJson(body.toString(), JsonObject.class);
+    }
+
+    private String erro(String mensagem) {
+        JsonObject obj = new JsonObject();
+        obj.addProperty("erro", mensagem);
+        return gson.toJson(obj);
     }
 }

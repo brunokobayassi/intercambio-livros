@@ -1,10 +1,6 @@
 package br.com.livros.model;
 
-import java.io.Serializable;
-
-public class TrocaDetalhada implements Serializable {
-
-    private static final long serialVersionUID = 1L;
+public class TrocaDetalhada {
 
     private int id;
     private String tituloLivroOferecido;
