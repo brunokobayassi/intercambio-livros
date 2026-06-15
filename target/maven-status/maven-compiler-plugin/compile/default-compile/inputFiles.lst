@@ -1,0 +1,16 @@
+C:\bruno\intercambio-livros\intercambio-livros\src\main\java\br\com\livros\model\Usuario.java
+C:\bruno\intercambio-livros\intercambio-livros\src\main\java\br\com\livros\service\TrocaService.java
+C:\bruno\intercambio-livros\intercambio-livros\src\main\java\br\com\livros\controller\LoginApiController.java
+C:\bruno\intercambio-livros\intercambio-livros\src\main\java\br\com\livros\dao\TrocaDAO.java
+C:\bruno\intercambio-livros\intercambio-livros\src\main\java\br\com\livros\model\TrocaDetalhada.java
+C:\bruno\intercambio-livros\intercambio-livros\src\main\java\br\com\livros\controller\TrocaApiController.java
+C:\bruno\intercambio-livros\intercambio-livros\src\main\java\br\com\livros\dao\LivroDAO.java
+C:\bruno\intercambio-livros\intercambio-livros\src\main\java\br\com\livros\model\Troca.java
+C:\bruno\intercambio-livros\intercambio-livros\src\main\java\br\com\livros\controller\LivroApiController.java
+C:\bruno\intercambio-livros\intercambio-livros\src\main\java\br\com\livros\util\JwtUtil.java
+C:\bruno\intercambio-livros\intercambio-livros\src\main\java\br\com\livros\service\LivroService.java
+C:\bruno\intercambio-livros\intercambio-livros\src\main\java\br\com\livros\filter\AuthFilter.java
+C:\bruno\intercambio-livros\intercambio-livros\src\main\java\br\com\livros\model\Livro.java
+C:\bruno\intercambio-livros\intercambio-livros\src\main\java\br\com\livros\dao\UsuarioDAO.java
+C:\bruno\intercambio-livros\intercambio-livros\src\main\java\br\com\livros\config\MysqlSingleton.java
+C:\bruno\intercambio-livros\intercambio-livros\src\main\java\br\com\livros\service\UsuarioService.java
